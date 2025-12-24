@@ -11,7 +11,7 @@
         
         .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
         
-        /* STATS DASHBOARD STYLES */
+        /* STATS DASHBOARD */
         .stats-container {
             display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
             margin-bottom: 2rem; padding: 10px; background: #e3f2fd; 
@@ -61,10 +61,9 @@
 </head>
 <body>
 
-    <h1>📘 My Personal Vocab</h1>
+    <h1>📘 My English Master</h1>
 
-    <div id="statsBoard" class="stats-container">
-        </div>
+    <div id="statsBoard" class="stats-container"></div>
 
     <div class="card">
         <h3 id="formTitle" style="margin-top:0;">Add New Word</h3>
@@ -102,33 +101,24 @@
         let editingId = null; 
         let isQuizMode = false; 
 
-        // Initial Render
         saveAndRender(); 
 
-        // --- STATS FUNCTION ---
         function updateStats() {
             const container = document.getElementById('statsBoard');
             const total = dictionary.length;
-            
-            // 1. Calculate counts
             const counts = {};
             dictionary.forEach(item => {
                 const cat = item.category;
                 counts[cat] = (counts[cat] || 0) + 1;
             });
 
-            // 2. Generate HTML
             let html = `<span class="stat-badge stat-total">📚 Total: ${total}</span>`;
-            
-            // Sort categories alphabetically for cleaner look
             Object.keys(counts).sort().forEach(cat => {
                 html += `<span class="stat-badge">${cat}: ${counts[cat]}</span>`;
             });
-
             container.innerHTML = html;
         }
 
-        // --- CORE FUNCTIONS ---
         function toggleCustomCategory() {
             const selectBox = document.getElementById('newCategory');
             const customInput = document.getElementById('customCatInput');
@@ -156,6 +146,18 @@
             }
 
             if (!word || !definition) { alert("Please write both a word and a definition."); return; }
+
+            // --- NEW: DUPLICATE CHECK ---
+            // Check if word exists (case-insensitive) AND it's not the word we are currently editing
+            const isDuplicate = dictionary.some(item => 
+                item.word.toLowerCase() === word.toLowerCase() && item.id !== editingId
+            );
+
+            if (isDuplicate) {
+                alert("⚠️ This word is already in your dictionary!");
+                return; // Stop here, do not save
+            }
+            // -----------------------------
 
             if (editingId) {
                 const index = dictionary.findIndex(item => item.id === editingId);
@@ -223,8 +225,7 @@
 
         function saveAndRender() {
             localStorage.setItem('myDictionary', JSON.stringify(dictionary));
-            updateStats(); // <--- This updates the stats every time you save!
-            
+            updateStats();
             const searchText = document.getElementById('searchBox').value;
             if (searchText) filterWords();
             else renderList(dictionary);
