@@ -5,63 +5,138 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ultimate Personal Dictionary</title>
     <style>
-        /* --- CSS STYLING --- */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 2rem auto; padding: 0 1rem; background-color: #f4f6f8; color: #333; }
-        h1 { text-align: center; color: #2c3e50; margin-bottom: 1rem; }
-        
-        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+        /* --- CSS VARIABLES (For Dark Mode Support) --- */
+        :root {
+            --bg-color: #f4f6f8;
+            --text-color: #333;
+            --card-bg: #ffffff;
+            --input-bg: #ffffff;
+            --input-border: #ddd;
+            --highlight: #007bff;
+            --accent-green: #28a745;
+        }
+
+        /* DARK MODE OVERRIDES */
+        .dark-mode {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --input-bg: #2d2d2d;
+            --input-border: #444;
+            --highlight: #4dabf7;
+            --accent-green: #4caf50;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 700px; 
+            margin: 2rem auto; 
+            padding: 0 1rem; 
+            background-color: var(--bg-color); 
+            color: var(--text-color); 
+            transition: background 0.3s, color 0.3s;
+        }
+
+        h1 { text-align: center; margin-bottom: 1rem; position: relative; }
+
+        /* THEME TOGGLE BUTTON (Top Right) */
+        .theme-btn {
+            position: absolute; top: 0; right: 0;
+            background: none; border: none; font-size: 1.5rem; cursor: pointer;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 1.5rem; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            margin-bottom: 1.5rem; 
+            transition: background 0.3s;
+        }
         
         /* STATS DASHBOARD */
         .stats-container {
             display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
-            margin-bottom: 2rem; padding: 10px; background: #e3f2fd; 
-            border-radius: 12px; border: 1px solid #bbdefb;
+            margin-bottom: 2rem; padding: 10px; 
+            background: var(--card-bg); /* Adaptive background */
+            border-radius: 12px; border: 1px solid var(--input-border);
         }
         .stat-badge {
-            background: white; padding: 5px 12px; border-radius: 20px;
-            font-size: 0.85rem; font-weight: 700; color: #495057;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #dee2e6;
+            background: var(--bg-color); padding: 5px 12px; border-radius: 20px;
+            font-size: 0.85rem; font-weight: 700; color: var(--text-color);
+            border: 1px solid var(--input-border);
         }
-        .stat-total { background: #007bff; color: white; border-color: #007bff; }
+        .stat-total { background: var(--highlight); color: white; border-color: var(--highlight); }
 
-        /* Inputs */
-        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; transition: border 0.3s; }
-        input:focus, textarea:focus, select:focus { border-color: #007bff; outline: none; }
+        /* INPUTS */
+        input, textarea, select { 
+            width: 100%; padding: 12px; margin-bottom: 12px; 
+            background-color: var(--input-bg); color: var(--text-color);
+            border: 1px solid var(--input-border); border-radius: 8px; 
+            box-sizing: border-box; font-size: 1rem; transition: border 0.3s; 
+        }
+        input:focus, textarea:focus, select:focus { border-color: var(--highlight); outline: none; }
         textarea { resize: vertical; height: 80px; font-family: inherit; }
-        #customCatInput { display: none; border-color: #17a2b8; background-color: #f0fbff; }
+        #customCatInput { display: none; border-color: #17a2b8; background-color: rgba(23, 162, 184, 0.1); }
 
-        /* Buttons */
+        /* BUTTONS */
         .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: bold; transition: opacity 0.2s; color: white; }
         .btn:hover { opacity: 0.9; }
-        .btn-primary { background-color: #007bff; }
+        .btn-primary { background-color: var(--highlight); }
         .btn-warning { background-color: #ffc107; color: #000; }
         .btn-secondary { background-color: #6c757d; margin-top: 5px; display: none; }
-        .btn-quiz { background-color: #6f42c1; width: auto; padding: 8px 16px; font-size: 0.9rem; }
-        .btn-backup { background-color: #28a745; width: auto; padding: 8px 16px; font-size: 0.9rem; }
-        .btn-restore { background-color: #17a2b8; width: auto; padding: 8px 16px; font-size: 0.9rem; }
+        .btn-quiz { background-color: #6f42c1; }
+        .btn-backup { background-color: var(--accent-green); }
+        .btn-restore { background-color: #17a2b8; }
+        .btn-random { background-color: #fd7e14; } /* Orange for Random */
 
-        .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-        .search-bar { flex-grow: 1; margin-bottom: 0; }
+        /* TOOLBARS */
+        .search-group-container { display: flex; gap: 8px; margin-bottom: 10px; }
+        #searchFilter { width: 35%; margin-bottom: 0; cursor: pointer; }
+        #searchBox { width: 65%; margin-bottom: 0; }
 
-        .word-item { background: white; border-left: 5px solid #007bff; padding: 1.2rem; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s; }
+        .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .toolbar .btn { width: auto; padding: 8px 12px; font-size: 0.9rem; flex-grow: 1; }
+
+        /* WORD ITEMS */
+        .word-item { 
+            background: var(--card-bg); 
+            border-left: 5px solid var(--highlight); 
+            padding: 1.2rem; margin-bottom: 12px; border-radius: 8px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            transition: transform 0.2s, background 0.3s; 
+        }
         .word-item:hover { transform: translateY(-2px); }
 
         .word-header { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
-        .word-title { font-weight: 800; font-size: 1.4rem; color: #2c3e50; }
-        .category-badge { background-color: #e9ecef; color: #495057; padding: 4px 10px; border-radius: 15px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+        .word-title { font-weight: 800; font-size: 1.4rem; }
+        .category-badge { 
+            background-color: var(--bg-color); color: var(--text-color); 
+            padding: 4px 10px; border-radius: 15px; 
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase; border: 1px solid var(--input-border);
+        }
         
-        .word-def { color: #555; line-height: 1.6; font-size: 1.05rem; white-space: pre-wrap; }
+        .word-def { line-height: 1.6; font-size: 1.05rem; white-space: pre-wrap; opacity: 0.9; }
         .blur-active { filter: blur(6px); cursor: pointer; user-select: none; }
         .blur-active:hover { filter: none; }
 
+        /* ACTIONS & ICONS */
         .actions { margin-left: auto; display: flex; gap: 12px; align-items: center; }
         .icon-btn { cursor: pointer; font-size: 1.2rem; transition: transform 0.2s; background: none; border: none; padding: 0; }
         .icon-btn:hover { transform: scale(1.2); }
+        
+        /* Google Icon Color */
+        .google-btn { font-size: 1.1rem; filter: grayscale(100%); opacity: 0.7; }
+        .google-btn:hover { filter: none; opacity: 1; }
+
     </style>
 </head>
 <body>
 
-    <h1>📘 My English Master</h1>
+    <h1>
+        📘 My English Master
+        <button class="theme-btn" onclick="toggleTheme()" title="Toggle Dark Mode">🌙</button>
+    </h1>
 
     <div id="statsBoard" class="stats-container"></div>
 
@@ -73,15 +148,23 @@
             </select>
         
         <input type="text" id="customCatInput" placeholder="Type category here (e.g., Finance)...">
-
         <textarea id="newDef" placeholder="Meaning and Example Sentence..."></textarea>
         
         <button id="mainBtn" class="btn btn-primary" onclick="handleWordSubmit()">Add Word</button>
         <button id="cancelBtn" class="btn btn-secondary" onclick="resetForm()">Cancel Edit</button>
     </div>
 
+    <div class="search-group-container">
+        <select id="searchFilter" onchange="filterWords()">
+            <option value="all">🌐 All</option>
+            <option value="word">🔤 By Word</option>
+            <option value="meaning">📖 By Meaning</option>
+        </select>
+        <input type="text" id="searchBox" placeholder="Type to search..." onkeyup="filterWords()">
+    </div>
+
     <div class="toolbar">
-        <input type="text" id="searchBox" class="search-bar" placeholder="🔍 Search..." onkeyup="filterWords()">
+        <button class="btn btn-random" onclick="showRandomWord()">🎲 Random</button>
         <button class="btn btn-quiz" onclick="toggleQuizMode()">🙈 Quiz</button>
         <button class="btn btn-backup" onclick="downloadData()">💾 Backup</button>
         <button class="btn btn-restore" onclick="triggerRestore()">📂 Restore</button>
@@ -91,112 +174,96 @@
     <div id="dictionaryList"></div>
 
     <script>
-        // --- 1. SETUP ---
+        // --- 1. SETUP & STATE ---
         let dictionary = JSON.parse(localStorage.getItem('myDictionary')) || [];
         let editingId = null; 
         let isQuizMode = false; 
-
-        // Core categories that ALWAYS exist
         const BASE_CATEGORIES = ['Noun', 'Verb', 'Adjective', 'Adverb', 'Idiom', 'Phrasal Verb'];
 
-        // Initial Start
+        // --- 2. INITIALIZATION ---
+        // Check for Dark Mode Preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.theme-btn').innerText = '☀️';
+        }
+        
         saveAndRender(); 
 
-        // --- 2. NEW LOGIC: Dynamic Category Dropdown ---
+        // --- 3. NEW FEATURE: DARK MODE ---
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+            const btn = document.querySelector('.theme-btn');
+            
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'enabled');
+                btn.innerText = '☀️'; // Sun icon for light mode
+            } else {
+                localStorage.setItem('darkMode', 'disabled');
+                btn.innerText = '🌙'; // Moon icon for dark mode
+            }
+        }
+
+        // --- 4. NEW FEATURE: RANDOM WORD ---
+        function showRandomWord() {
+            if (dictionary.length === 0) { alert("Add some words first!"); return; }
+            
+            // Pick random word
+            const randomItem = dictionary[Math.floor(Math.random() * dictionary.length)];
+            
+            // Put it in search box and filter
+            document.getElementById('searchBox').value = randomItem.word;
+            filterWords();
+            
+            // Optional: Scroll to it (it will be the only one shown usually)
+            window.scrollTo({ top: 300, behavior: 'smooth' });
+        }
+
+        // --- 5. DYNAMIC DROPDOWN LOGIC ---
         function renderCategoryDropdown(selectedCategory = null) {
             const selectBox = document.getElementById('newCategory');
-            
-            // Step A: Count how many times each category is used
             const counts = {};
-            dictionary.forEach(item => {
-                const cat = item.category;
-                counts[cat] = (counts[cat] || 0) + 1;
-            });
+            dictionary.forEach(item => { counts[item.category] = (counts[item.category] || 0) + 1; });
 
-            // Step B: Determine which categories to show
             let activeCategories = new Set(BASE_CATEGORIES);
-            Object.keys(counts).forEach(cat => {
-                if (counts[cat] > 5) {
-                    activeCategories.add(cat);
-                }
-            });
+            Object.keys(counts).forEach(cat => { if (counts[cat] > 5) activeCategories.add(cat); });
 
-            // Step C: Convert to array and SORT
             let sortedCats = Array.from(activeCategories).sort((a, b) => {
-                // RULE 1: Noun is ALWAYS first
                 if (a === 'Noun') return -1;
                 if (b === 'Noun') return 1;
-
-                // RULE 2: Sort by Popularity (Higher counts at top)
                 const countA = counts[a] || 0;
                 const countB = counts[b] || 0;
-                if (countB !== countA) {
-                    return countB - countA; // Descending order
-                }
-
-                // RULE 3: Alphabetical tie-breaker
+                if (countB !== countA) return countB - countA; 
                 return a.localeCompare(b);
             });
 
-            // Step D: Build HTML
             selectBox.innerHTML = '';
             sortedCats.forEach(cat => {
                 const option = document.createElement('option');
                 option.value = cat;
-                // --- UPDATE: Removed the (${count}) display ---
                 option.text = cat; 
                 selectBox.appendChild(option);
             });
 
-            // Always add "Other" at the bottom
             const otherOpt = document.createElement('option');
             otherOpt.value = 'Other';
             otherOpt.text = 'Other (Type Custom...)';
             selectBox.appendChild(otherOpt);
 
-            // Step E: Restore selection if needed
             if (selectedCategory && activeCategories.has(selectedCategory)) {
                 selectBox.value = selectedCategory;
                 document.getElementById('customCatInput').style.display = 'none';
             } else if (selectedCategory) {
-                // If the word has a category not in the list (count < 5), select "Other" and fill text box
                 selectBox.value = 'Other';
                 document.getElementById('customCatInput').style.display = 'block';
                 document.getElementById('customCatInput').value = selectedCategory;
             } else {
-                selectBox.value = 'Noun'; // Default
+                selectBox.value = 'Noun';
                 document.getElementById('customCatInput').style.display = 'none';
             }
         }
 
-        // --- 3. CORE FUNCTIONS ---
-        function updateStats() {
-            const container = document.getElementById('statsBoard');
-            const total = dictionary.length;
-            const counts = {};
-            dictionary.forEach(item => {
-                const cat = item.category;
-                counts[cat] = (counts[cat] || 0) + 1;
-            });
-
-            let html = `<span class="stat-badge stat-total">📚 Total: ${total}</span>`;
-            Object.keys(counts).sort().forEach(cat => {
-                html += `<span class="stat-badge">${cat}: ${counts[cat]}</span>`;
-            });
-            container.innerHTML = html;
-        }
-
-        function toggleCustomCategory() {
-            const selectBox = document.getElementById('newCategory');
-            const customInput = document.getElementById('customCatInput');
-            if (selectBox.value === 'Other') {
-                customInput.style.display = 'block';
-                customInput.focus();
-            } else {
-                customInput.style.display = 'none';
-            }
-        }
-
+        // --- 6. CORE CRUD FUNCTIONS ---
         function handleWordSubmit() {
             const wordInput = document.getElementById('newWord');
             const selectBox = document.getElementById('newCategory');
@@ -209,9 +276,7 @@
             let finalCategory = selectBox.value;
             if (selectBox.value === 'Other') {
                 finalCategory = customInput.value.trim();
-                if (finalCategory) {
-                    finalCategory = finalCategory.charAt(0).toUpperCase() + finalCategory.slice(1);
-                }
+                if (finalCategory) finalCategory = finalCategory.charAt(0).toUpperCase() + finalCategory.slice(1);
                 if (!finalCategory) { alert("Please type a custom category name!"); return; }
             }
 
@@ -238,12 +303,9 @@
         function editWord(id) {
             const item = dictionary.find(w => w.id === id);
             if (!item) return;
-
             document.getElementById('newWord').value = item.word;
             document.getElementById('newDef').value = item.definition;
-
             renderCategoryDropdown(item.category);
-
             editingId = id;
             document.getElementById('formTitle').innerText = "Edit Word";
             const mainBtn = document.getElementById('mainBtn');
@@ -266,7 +328,6 @@
             document.getElementById('newWord').value = '';
             document.getElementById('newDef').value = '';
             document.getElementById('customCatInput').value = '';
-            
             document.getElementById('formTitle').innerText = "Add New Word";
             const mainBtn = document.getElementById('mainBtn');
             mainBtn.innerText = "Add Word";
@@ -275,11 +336,12 @@
             renderCategoryDropdown(); 
         }
 
+        // --- 7. RENDERING & FILTERING ---
         function saveAndRender() {
             localStorage.setItem('myDictionary', JSON.stringify(dictionary));
             updateStats();
             if (!editingId) renderCategoryDropdown(); 
-
+            // Check if search is active (e.g. random word was just clicked)
             const searchText = document.getElementById('searchBox').value;
             if (searchText) filterWords();
             else renderList(dictionary);
@@ -288,16 +350,20 @@
         function renderList(data) {
             const listContainer = document.getElementById('dictionaryList');
             listContainer.innerHTML = ''; 
-            if (data.length === 0) { listContainer.innerHTML = '<p style="text-align:center; color:#888;">No words found.</p>'; return; }
+            if (data.length === 0) { listContainer.innerHTML = '<p style="text-align:center; opacity:0.6;">No words found.</p>'; return; }
 
             data.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'word-item';
                 const blurClass = isQuizMode ? 'blur-active' : '';
+                
+                // --- NEW: Added Google Button 🔍 ---
                 div.innerHTML = `
                     <div class="word-header">
                         <span class="word-title">${item.word}</span>
                         <button class="icon-btn speak-btn" onclick="speakWord('${item.word}')">🔊</button>
+                        <button class="icon-btn google-btn" onclick="googleWord('${item.word}')" title="Google Search">🔍</button>
+                        
                         <span class="category-badge">${item.category}</span>
                         <div class="actions">
                             <button class="icon-btn edit-btn" onclick="editWord(${item.id})">✏️</button>
@@ -310,20 +376,47 @@
             });
         }
 
+        function updateStats() {
+            const container = document.getElementById('statsBoard');
+            const total = dictionary.length;
+            const counts = {};
+            dictionary.forEach(item => { counts[item.category] = (counts[item.category] || 0) + 1; });
+
+            let html = `<span class="stat-badge stat-total">📚 Total: ${total}</span>`;
+            Object.keys(counts).sort().forEach(cat => {
+                html += `<span class="stat-badge">${cat}: ${counts[cat]}</span>`;
+            });
+            container.innerHTML = html;
+        }
+
         function filterWords() {
             const searchText = document.getElementById('searchBox').value.toLowerCase();
-            const filtered = dictionary.filter(item => 
-                item.word.toLowerCase().includes(searchText) || 
-                item.category.toLowerCase().includes(searchText)
-            );
+            const filterType = document.getElementById('searchFilter').value;
+
+            const filtered = dictionary.filter(item => {
+                const matchWord = item.word.toLowerCase().includes(searchText);
+                const matchCat = item.category.toLowerCase().includes(searchText);
+                const matchDef = item.definition.toLowerCase().includes(searchText);
+
+                if (filterType === 'word') return matchWord || matchCat;
+                if (filterType === 'meaning') return matchDef;
+                return matchWord || matchCat || matchDef;
+            });
             renderList(filtered);
         }
 
+        // --- 8. UTILITIES ---
         function speakWord(text) {
             window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance(text);
             msg.lang = 'en-US';
             window.speechSynthesis.speak(msg);
+        }
+
+        // --- NEW: Google Search Function ---
+        function googleWord(word) {
+            const url = `https://www.google.com/search?q=define+${word}`;
+            window.open(url, '_blank');
         }
 
         function toggleQuizMode() {
